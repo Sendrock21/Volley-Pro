@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Volley Mix 4×4 — V6.1</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#182230}
+header{background:#173b67;color:white;padding:22px 18px;text-align:center}
+header h1{margin:0 0 6px;font-size:26px}header p{margin:0;opacity:.9}
+nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;background:white;padding:10px;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px #0001}
+nav button{border:0;border-radius:10px;padding:11px 15px;background:#e8eef6;cursor:pointer;font-weight:700}
+nav button.active{background:#173b67;color:white}
+main{max-width:1100px;margin:20px auto;padding:0 14px}.tab{display:none}.tab.active{display:block}
+.card{background:white;border-radius:15px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px #0000000d}
+h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+label{font-weight:700;font-size:14px}input,select{width:100%;padding:10px;border:1px solid #ccd6e3;border-radius:9px;margin-top:5px;background:white}
+button.primary{background:#1769aa;color:white;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}
+button.danger{background:#c62828;color:white;border:0;border-radius:9px;padding:8px 10px;cursor:pointer}
+button.secondary{background:#e9eef5;border:0;border-radius:9px;padding:9px 12px;cursor:pointer}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.notice{padding:12px;border-radius:10px;background:#fff5d8;margin:10px 0}.ok{background:#e4f6ea}
+.player{border:1px solid #dce4ee;border-radius:11px;padding:12px;margin:8px 0;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eaf0f7;font-size:12px;margin:2px}.badge.f{background:#ffe4ef}.badge.h{background:#e3efff}.small{font-size:13px;color:#64748b}
+.checkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px;margin-top:12px}
+.check{border:1px solid #d9e2ec;padding:9px;border-radius:9px;display:flex;gap:8px;align-items:center}.check input{width:auto;margin:0}
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.team{background:white;border:2px solid #dce6f1;border-radius:14px;padding:15px}.team h3{margin:0 0 8px}
+.member{padding:8px 0;border-bottom:1px solid #edf1f5}.member:last-child{border-bottom:0}
+.sub{font-size:12px;color:#a45d00;font-weight:700}.court{font-weight:700}
+.empty{color:#6b7280;text-align:center;padding:25px}
+.editbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;flex:1}
+footer{text-align:center;color:#718096;font-size:12px;padding:20px}
+
+.position-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:7px;margin-top:6px}
+.position-checks label{font-weight:500;border:1px solid #d9e2ec;border-radius:9px;padding:8px;display:flex;gap:7px;align-items:center}
+.position-checks input{width:auto;margin:0}
+.warning{padding:12px;border-radius:10px;background:#fff3cd;border:1px solid #e7c45b;margin:10px 0}
+.role{font-size:12px;font-weight:700;color:#315b83}
+</style>
+</head>
+<body>
+<header>
+<h1>🏐 Volley Mix 4×4 — V6.1.2</h1>
+<p>Création d'équipes équilibrées • 4 joueurs sur le terrain • rotation des remplaçants</p>
+</header>
+<nav>
+<button class="tabBtn active" data-tab="players">👥 Joueurs</button>
+<button class="tabBtn" data-tab="session">🎯 Session</button>
+<button class="tabBtn" data-tab="history">📚 Historique</button>
+</nav>
+
+<main>
+<section id="players" class="tab active">
+<div class="card">
+<h2>Ajouter un joueur</h2>
+<div class="grid">
+<label>Prénom<input id="firstName" placeholder="Ex. Thomas"></label>
+<label>Niveau<select id="level"><option>Niveau 1</option><option>Niveau 2</option><option>Niveau 3</option><option>Compétiteur</option></select></label>
+<label>Genre<select id="gender"><option value="F">Femme</option><option value="H">Homme</option></select></label>
+<div><label>Postes</label>
+    <div class="position-checks">
+      <label><input type="checkbox" name="position" value="Passeur"> Passeur</label>
+      <label><input type="checkbox" name="position" value="Central"> Central</label>
+      <label><input type="checkbox" name="position" value="A2"> Attaquant (2)</label>
+      <label><input type="checkbox" name="position" value="A4"> Attaquant (4)</label>
+      <label><input type="checkbox" name="position" value="Polyvalent"> Polyvalent</label>
+    </div></div>
+</div>
+<div class="actions"><button class="primary" onclick="addPlayer()">Ajouter le joueur</button></div>
+<p class="small">Maximum 70 joueurs dans la base.</p>
+</div>
+<div class="card">
+<h2>Joueurs (<span id="playerCount">0</span>/70)</h2>
+<div id="playerList"></div>
+</div>
+</section>
+
+<section id="session" class="tab">
+<div class="card">
+<h2>Créer une session</h2>
+<div class="grid">
+<label>Date<input type="date" id="sessionDate"></label>
+<label>Femmes minimum sur le terrain / équipe<input id="minWomen" type="number" min="1" value="1"></label>
+</div>
+<div class="notice">Objectif V6.1 : <b>Passeur + Central + Attaquant (2) + Attaquant (4)</b>. Les postes secondaires puis les polyvalents sont utilisés si nécessaire. A2 ↔ A4 n'est utilisé qu'en dernier recours. Un manque de poste ou de femmes <b>ne bloque plus</b> la génération : l'application équilibre au mieux et affiche un avertissement.</div>
+<h3>Joueurs présents (<span id="selectedCount">0</span>/30)</h3>
+<div id="sessionPlayers" class="checkgrid"></div>
+<div class="actions">
+<button class="primary" onclick="generateTeams()">🎲 Générer les équipes</button>
+<button class="secondary" onclick="selectAll30()">Sélectionner jusqu'à 30</button>
+<button class="secondary" onclick="clearSelection()">Tout désélectionner</button>
+</div>
+<div id="sessionMessage"></div>
+</div>
+<div id="result"></div>
+</section>
+
+<section id="history" class="tab">
+<div class="card">
+<h2>Historique</h2>
+<p class="small">Les joueurs et l’historique des sessions sont synchronisés avec Supabase et partagés entre les appareils. L’historique sert notamment à éviter de remettre trop souvent les mêmes joueurs ensemble et à faire tourner les remplaçants.</p>
+<div class="actions"><button class="danger" onclick="clearHistory()">Effacer l'historique</button></div>
+<div id="historyList"></div>
+</div>
+</section>
+</main>
+<footer>Volley Mix 4×4 — V6.1.2 · joueurs et historique synchronisés avec Supabase.</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const SUPABASE_URL="https://wmjawyinicjsxmhxsflj.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_tAp_tIiXKurP6PDBD5lPEw_VKrtH30S";
+const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+
+const KEY="volleyMixV61";
+const OLD_KEYS=["volley_mix_v6_recreated","volleyMixV6","volleyMixV5","volleyMixV4"];
+const LEVEL={"Niveau 1":1,"Niveau 2":2,"Niveau 3":3,"Compétiteur":4};
+const ROLES=["Passeur","Central","A2","A4"];
+const ROLE_LABEL={Passeur:"Passeur",Central:"Central",A2:"Attaquant (2)",A4:"Attaquant (4)"};
+let players=[],history=[],currentTeams=[];
+
+function uid(){return crypto.randomUUID?crypto.randomUUID():"p_"+Date.now()+"_"+Math.random().toString(36).slice(2)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function normPos(v){
+  let a=Array.isArray(v)?v:(typeof v==="string"?v.split(","):[]);
+  a=a.flatMap(x=>{
+    x=String(x).trim();
+    if(["Réception/Attaque","Réception-Attaque"].includes(x)) return ["A2","A4"];
+    if(x==="Attaquant (2)") return ["A2"];
+    if(x==="Attaquant (4)") return ["A4"];
+    return x?[x]:[];
+  });
+  return [...new Set(a)].filter(x=>["Passeur","Central","A2","A4","Polyvalent"].includes(x));
+}
+function normalizePlayer(p){
+  return {
+    id:p.id||uid(), first:p.first||p.name||p.prenom||"Joueur",
+    level:p.level||p.niveau||"Niveau 1", gender:p.gender||p.sexe||"H",
+    positions:normPos(p.positions||p.postes||p.position||p.pos),
+    subUses:Number(p.subUses||0)
+  };
+}
+async function load(){
+  const [playersRes,sessionsRes]=await Promise.all([
+    supabaseClient.from("players").select("*"),
+    supabaseClient.from("sessions").select("id,created_at,session_date,teams,substitutes,sizes").order("created_at",{ascending:true})
+  ]);
+
+  if(playersRes.error){
+    console.error("Supabase players load error:",playersRes.error);
+    alert("Impossible de charger les joueurs depuis Supabase : "+playersRes.error.message);
+    players=[];
+    return;
+  }
+  if(sessionsRes.error){
+    console.error("Supabase sessions load error:",sessionsRes.error);
+    alert("Impossible de charger l’historique depuis Supabase : "+sessionsRes.error.message);
+    history=[];
+  }
+
+  players=(playersRes.data||[]).map(row=>normalizePlayer({
+    id:row.id,
+    first:row.first ?? row.name ?? row.prenom,
+    level:row.level ?? row.niveau,
+    gender:row.gender ?? row.sexe,
+    positions:row.positions ?? row.postes ?? row.position ?? row.pos,
+    subUses:0
+  }));
+
+  history=(sessionsRes.data||[]).map(row=>({
+    id:row.id,
+    date:row.session_date,
+    teams:Array.isArray(row.teams)?row.teams:[],
+    sizes:Array.isArray(row.sizes)?row.sizes:[],
+    substitutes:Array.isArray(row.substitutes)?row.substitutes:[],
+    savedAt:row.created_at
+  }));
+
+  // Reconstitue le compteur de remplacements depuis l’historique partagé.
+  players.forEach(p=>p.subUses=0);
+  history.forEach(h=>(h.substitutes||[]).forEach(id=>{
+    if(id!==null&&id!==undefined){const p=getP(id);if(p)p.subUses=(p.subUses||0)+1;}
+  }));
+}
+
+async function insertPlayerSupabase(p){
+  const {data,error}=await supabaseClient.from("players").insert({
+    name:p.first,
+    level:p.level,
+    gender:p.gender,
+    position:(p.positions&&p.positions.length)?p.positions[0]:null,
+    positions:p.positions
+  }).select("id,created_at,name,gender,level,position,positions").single();
+  if(error) throw error;
+  return data;
+}
+async function updatePlayerSupabase(p){
+  const {error}=await supabaseClient.from("players").update({
+    name:p.first,
+    level:p.level,
+    gender:p.gender,
+    position:(p.positions&&p.positions.length)?p.positions[0]:null,
+    positions:p.positions
+  }).eq("id",p.id);
+  if(error) throw error;
+}
+async function deletePlayerSupabase(id){
+  const {error}=await supabaseClient.from("players").delete().eq("id",id);
+  if(error) throw error;
+}
+function positionsText(p){return p.positions.map(x=>ROLE_LABEL[x]||x).join(" · ")||"Aucun poste"}
+function isWoman(p){return p.gender==="F"}
+function hasExact(p,r){return p.positions.includes(r)}
+function canRole(p,r){return p.positions.includes(r)||p.positions.includes("Polyvalent")}
+function sameId(a,b){return String(a)===String(b)}
+function getP(id){return players.find(p=>sameId(p.id,id))}
+function pairCount(a,b){
+  let n=0;
+  for(const h of history) for(const t of h.teams||[]){
+    if(t.some(id=>sameId(id,a))&&t.some(id=>sameId(id,b))) n++;
+  }
+  return n;
+}
+function teamSizes(n){
+  if(n<4||n>30)return null;
+  for(let teams=Math.ceil(n/5);teams<=Math.min(6,Math.floor(n/4));teams++){
+    const n5=n-4*teams;
+    if(n5>=0&&n5<=teams)return [...Array(n5).fill(5),...Array(teams-n5).fill(4)];
+  }
+  return null;
+}
+function assignRoles(team){
+  let best=null,bestCost=1e9;
+  function cost(p,r){
+    if(hasExact(p,r)) return p.positions.length===1?0:1;
+    if(p.positions.includes("Polyvalent")) return 3;
+    if((r==="A2"&&hasExact(p,"A4"))||(r==="A4"&&hasExact(p,"A2"))) return 7;
+    return 100;
+  }
+  function rec(ri,used,map,c){
+    if(ri===ROLES.length){if(c<bestCost){bestCost=c;best={...map}};return}
+    const r=ROLES[ri];
+    // Missing role is allowed, but expensive.
+    rec(ri+1,used,map,c+20);
+    team.forEach((p,i)=>{
+      if(used.has(i))return;
+      const cc=cost(p,r); if(cc>=100)return;
+      used.add(i);map[r]={p,kind:cc>=7?"fallback":cc>=3?"poly":"exact"};
+      rec(ri+1,used,map,c+cc);
+      used.delete(i);delete map[r];
+    });
+  }
+  rec(0,new Set(),{},0);
+  return best||{};
+}
+function roleWarnings(team,index){
+  const a=assignRoles(team), out=[];
+  for(const r of ROLES) if(!a[r]) out.push(`Équipe ${index+1} : aucun joueur disponible pour ${ROLE_LABEL[r]}.`);
+  for(const r of ["A2","A4"]) if(a[r]?.kind==="fallback"){
+    const other=r==="A2"?"Attaquant (4)":"Attaquant (2)";
+    out.push(`Équipe ${index+1} : ${other} affecté à ${ROLE_LABEL[r]} faute de poste exact.`);
+  }
+  return out;
+}
+function chooseSub(ids,minW,rotationSeed=0){
+  if(ids.length!==5)return null;
+  const candidates=ids.map(getP);
+  const feasible=candidates.filter(p=>ids.filter(x=>x!==p.id).map(getP).filter(isWoman).length>=minW);
+  const pool=feasible.length?feasible:candidates;
+  return pool.slice().sort((a,b)=>(a.subUses-b.subUses)||((pairCount(a.id,ids[0])-pairCount(b.id,ids[0])))||a.first.localeCompare(b.first))[rotationSeed%pool.length]?.id;
+}
+function buildTeamObjects(raw,minW){
+  return raw.map(ids=>{
+    const sub=ids.length===5?chooseSub(ids,minW):null;
+    return {size:ids.length,ids:[...ids],sub,active:sub?ids.filter(x=>x!==sub):[...ids]};
+  });
+}
+function objective(raw,minW){
+  let c=0;
+  const strengths=raw.map(t=>t.reduce((s,id)=>s+(LEVEL[getP(id).level]||1),0)/t.length);
+  const sm=strengths.reduce((a,b)=>a+b,0)/strengths.length;
+  c+=strengths.reduce((s,x)=>s+(x-sm)**2,0)*40;
+  const women=raw.map(t=>t.filter(id=>isWoman(getP(id))).length);
+  const wm=women.reduce((a,b)=>a+b,0)/women.length;
+  c+=women.reduce((s,x)=>s+(x-wm)**2,0)*80;
+  for(const ids of raw){
+    const ps=ids.map(getP), ass=assignRoles(ps);
+    c+=ROLES.filter(r=>!ass[r]).length*180;
+    c+=Object.values(ass).filter(x=>x.kind==="fallback").length*35;
+    if(ids.length===4){
+      c+=Math.max(0,ps.filter(p=>hasExact(p,"Passeur")).length-1)*22;
+      c+=Math.max(0,ps.filter(p=>hasExact(p,"Central")).length-1)*22;
+    }
+    for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++)c+=pairCount(ids[i],ids[j])*24;
+    if(ids.length===5){
+      const sub=chooseSub(ids,minW);
+      c+=(getP(sub)?.subUses||0)*5;
+      const active=ids.filter(x=>x!==sub).map(getP);
+      if(active.filter(isWoman).length<minW)c+=120;
+    } else if(ps.filter(isWoman).length<minW)c+=120;
+  }
+  return c;
+}
+function generateRaw(ids,sizes,minW){
+  let best=null,bestCost=Infinity;
+  const attempts=Math.min(2200,500+ids.length*55);
+  for(let a=0;a<attempts;a++){
+    const pool=[...ids].sort(()=>Math.random()-.5);
+    const raw=sizes.map(()=>[]);
+    // constrained positions first, with a little randomization
+    pool.sort((x,y)=>(getP(x).positions.length-getP(y).positions.length)+(Math.random()-.5));
+    for(const id of pool){
+      let choice=-1,bc=Infinity;
+      raw.forEach((t,i)=>{
+        if(t.length>=sizes[i])return;
+        const before=objectivePartial(t),after=objectivePartial([...t,id]);
+        const hist=t.reduce((s,x)=>s+pairCount(id,x),0);
+        const w=t.filter(x=>isWoman(getP(x))).length+(isWoman(getP(id))?1:0);
+        const cc=(after-before)*12+hist*20+w*w*.8+Math.random()*6;
+        if(cc<bc){bc=cc;choice=i}
+      });
+      raw[choice].push(id);
+    }
+    // random swap hill-climb
+    for(let k=0;k<120;k++){
+      const a1=Math.floor(Math.random()*raw.length),b1=Math.floor(Math.random()*raw.length);
+      if(a1===b1)continue;
+      const ia=Math.floor(Math.random()*raw[a1].length),ib=Math.floor(Math.random()*raw[b1].length);
+      const old=objective(raw,minW);
+      [raw[a1][ia],raw[b1][ib]]=[raw[b1][ib],raw[a1][ia]];
+      if(objective(raw,minW)>old)[raw[a1][ia],raw[b1][ib]]=[raw[b1][ib],raw[a1][ia]];
+    }
+    const cc=objective(raw,minW);
+    if(cc<bestCost){bestCost=cc;best=raw.map(t=>[...t])}
+  }
+  return best;
+}
+function objectivePartial(ids){
+  if(!ids.length)return 0;
+  const ps=ids.map(getP),a=assignRoles(ps);
+  return ROLES.filter(r=>!a[r]).length*4 + Math.max(0,ps.filter(p=>hasExact(p,"Passeur")).length-1) + Math.max(0,ps.filter(p=>hasExact(p,"Central")).length-1);
+}
+
+// Navigation
+document.querySelectorAll(".tabBtn").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll(".tabBtn").forEach(x=>x.classList.remove("active"));
+ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active");
+ if(b.dataset.tab==="session")renderSession(); if(b.dataset.tab==="history")renderHistory();
+});
+document.getElementById("sessionDate").value=new Date().toISOString().slice(0,10);
+
+async function addPlayer(){
+ if(players.length>=70)return alert("Maximum de 70 joueurs atteint.");
+ const first=document.getElementById("firstName").value.trim(); if(!first)return alert("Indique le prénom.");
+ const positions=[...document.querySelectorAll('input[name="position"]:checked')].map(x=>x.value);
+ if(!positions.length)return alert("Sélectionne au moins un poste.");
+ const p={first,level:level.value,gender:gender.value,positions,subUses:0};
+ try{
+   const row=await insertPlayerSupabase(p);
+   p.id=row.id;
+   players.push(normalizePlayer(p));
+   firstName.value="";
+   document.querySelectorAll('input[name="position"]').forEach(x=>x.checked=false);
+   renderPlayers();renderSession();
+ }catch(e){
+   console.error(e);
+   alert("Impossible d'ajouter le joueur dans Supabase : "+e.message);
+ }
+}
+function renderPlayers(){
+ playerCount.textContent=players.length;
+ playerList.innerHTML=players.length?players.map(p=>`<div class="player" id="p_${p.id}"><div><b>${esc(p.first)}</b>
+ <span class="badge ${p.gender==="F"?"f":"h"}">${p.gender==="F"?"Femme":"Homme"}</span><span class="badge">${esc(p.level)}</span>
+ <span class="badge">${esc(positionsText(p))}</span></div><div class="actions"><button class="secondary" onclick="editPlayer('${p.id}')">✏️ Modifier</button><button class="danger" onclick="deletePlayer('${p.id}')">Supprimer</button></div></div>`).join(""):'<div class="empty">Aucun joueur pour le moment.</div>';
+}
+function editPlayer(id){
+ const p=getP(id),el=document.getElementById("p_"+id); if(!p||!el)return;
+ el.innerHTML=`<div class="editbox"><label>Prénom<input id="e_name_${id}" value="${esc(p.first)}"></label>
+ <label>Niveau<select id="e_level_${id}">${Object.keys(LEVEL).map(x=>`<option ${x===p.level?"selected":""}>${x}</option>`).join("")}</select></label>
+ <label>Genre<select id="e_gender_${id}"><option value="F" ${p.gender==="F"?"selected":""}>Femme</option><option value="H" ${p.gender==="H"?"selected":""}>Homme</option></select></label>
+ <div><label>Postes</label><div class="position-checks">${["Passeur","Central","A2","A4","Polyvalent"].map(x=>`<label><input type="checkbox" class="e_pos_${id}" value="${x}" ${p.positions.includes(x)?"checked":""}> ${ROLE_LABEL[x]||x}</label>`).join("")}</div></div>
+ </div><div class="actions"><button class="primary" onclick="saveEdit('${id}')">Enregistrer</button><button class="secondary" onclick="renderPlayers()">Annuler</button></div>`;
+}
+async function saveEdit(id){
+ const p=getP(id);if(!p)return;
+ const pos=[...document.querySelectorAll(".e_pos_"+CSS.escape(id)+":checked")].map(x=>x.value);
+ if(!pos.length)return alert("Sélectionne au moins un poste.");
+ const old={...p,positions:[...p.positions]};
+ p.first=document.getElementById("e_name_"+id).value.trim()||p.first;
+ p.level=document.getElementById("e_level_"+id).value;
+ p.gender=document.getElementById("e_gender_"+id).value;
+ p.positions=pos;
+ try{
+   await updatePlayerSupabase(p);
+   renderPlayers();renderSession();
+ }catch(e){
+   Object.assign(p,old);
+   console.error(e);
+   alert("Impossible de modifier le joueur dans Supabase : "+e.message);
+ }
+}
+async function deletePlayer(id){
+ const p=getP(id);
+ if(!p||!confirm("Supprimer "+p.first+" ?"))return;
+ try{
+   await deletePlayerSupabase(id);
+   players=players.filter(x=>!sameId(x.id,id));
+   renderPlayers();renderSession();
+ }catch(e){
+   console.error(e);
+   alert("Impossible de supprimer le joueur dans Supabase : "+e.message);
+ }
+}
+function renderSession(){
+ const selected=new Set([...document.querySelectorAll(".sessionCheck:checked")].map(x=>String(x.value)));
+ sessionPlayers.innerHTML=players.length?players.map(p=>`<label class="check"><input class="sessionCheck" type="checkbox" value="${p.id}" ${selected.has(String(p.id))?"checked":""} onchange="updateCount()"> <span><b>${esc(p.first)}</b><br><span class="small">${esc(p.level)} · ${esc(positionsText(p))} · ${p.gender}</span></span></label>`).join(""):'<div class="empty">Ajoute d’abord des joueurs.</div>';
+ updateCount();
+}
+function updateCount(){selectedCount.textContent=document.querySelectorAll(".sessionCheck:checked").length}
+function selectAll30(){document.querySelectorAll(".sessionCheck").forEach((c,i)=>c.checked=i<30);updateCount()}
+function clearSelection(){document.querySelectorAll(".sessionCheck").forEach(c=>c.checked=false);updateCount()}
+function showMsg(msg,cls="notice"){sessionMessage.innerHTML=`<div class="${cls}">${msg}</div>`}
+
+function generateTeams(){
+ const ids=[...document.querySelectorAll(".sessionCheck:checked")].map(x=>x.value),minW=Math.max(1,parseInt(minWomen.value)||1);
+ if(ids.length<4||ids.length>30)return showMsg("Choisis entre 4 et 30 joueurs.");
+ const sizes=teamSizes(ids.length); if(!sizes)return showMsg("Ce nombre de joueurs ne peut pas être réparti uniquement en équipes de 4 ou 5 (maximum 6 équipes). Ajoute ou retire un joueur.");
+ const raw=generateRaw(ids,sizes,minW); if(!raw)return showMsg("La génération a échoué. Relance la génération.");
+ currentTeams=buildTeamObjects(raw,minW);
+ const women=ids.filter(id=>isWoman(getP(id))).length;
+ let notes=[];
+ if(women<minW*sizes.length)notes.push(`Seulement ${women} femme(s) pour ${sizes.length} équipe(s) : la règle de ${minW} femme(s) sur le terrain par équipe est appliquée au mieux, sans bloquer la génération.`);
+ currentTeams.forEach((t,i)=>notes.push(...roleWarnings(t.ids.map(getP),i)));
+ sessionMessage.innerHTML=notes.length?`<div class="warning"><b>⚠️ Équipes générées avec adaptations :</b><br>${notes.map(x=>"• "+esc(x)).join("<br>")}</div>`:'<div class="notice ok">✓ Équipes générées : composition idéale et équilibrage respectés au mieux.</div>';
+ renderResult();
+}
+function renderResult(){
+ const date=sessionDate.value;
+ result.innerHTML=`<div class="card"><h2>Équipes — ${esc(date)}</h2><div class="teams">${currentTeams.map((t,i)=>{
+   const ass=assignRoles(t.active.map(getP));
+   const roleById={};Object.entries(ass).forEach(([r,v])=>roleById[v.p.id]=ROLE_LABEL[r]+(v.kind==="fallback"?" ⚠️":""));
+   return `<div class="team"><h3>Équipe ${i+1}</h3><div class="small">${t.size===5?"5 joueurs · 4 sur le terrain + 1 remplaçant":"4 joueurs · tous sur le terrain"}</div>
+   ${t.ids.map(id=>{const p=getP(id),sub=t.sub===id;return `<div class="member ${sub?"sub":"court"}">${esc(p.first)} ${sub?"🔄 REMPLAÇANT":"🏐"}<br><span class="small">${esc(p.level)} · ${esc(positionsText(p))}</span>${!sub&&roleById[id]?`<br><span class="role">→ ${esc(roleById[id])}</span>`:""}</div>`}).join("")}
+   ${t.size===5?`<div class="actions"><button class="secondary" onclick="rotateSub(${i})">🔁 Tour suivant</button></div>`:""}</div>`;
+ }).join("")}</div><div class="actions"><button class="primary" onclick="saveSession()">💾 Enregistrer cette session</button></div></div>`;
+}
+function rotateSub(i){
+ const t=currentTeams[i];if(!t||t.size!==5)return;
+ const minW=Math.max(1,parseInt(minWomen.value)||1);
+ const order=t.ids.map(getP).sort((a,b)=>(a.subUses-b.subUses)||a.first.localeCompare(b.first));
+ const current=t.sub,idx=order.findIndex(p=>p.id===current);
+ let chosen=null;
+ for(let k=1;k<=order.length;k++){
+   const p=order[(idx+k)%order.length],active=t.ids.filter(x=>x!==p.id).map(getP);
+   if(active.filter(isWoman).length>=minW){chosen=p;break}
+ }
+ if(!chosen)chosen=order[(idx+1+order.length)%order.length];
+ t.sub=chosen.id;t.active=t.ids.filter(x=>x!==chosen.id);renderResult();
+}
+async function saveSession(){
+ if(!currentTeams.length)return;
+ const payload={
+   session_date:sessionDate.value||new Date().toISOString().slice(0,10),
+   teams:currentTeams.map(t=>[...t.ids]),
+   sizes:currentTeams.map(t=>t.size),
+   substitutes:currentTeams.map(t=>t.sub??null)
+ };
+ try{
+   const {data,error}=await supabaseClient.from("sessions").insert(payload).select("id,created_at,session_date,teams,substitutes,sizes").single();
+   if(error)throw error;
+   history.push({id:data.id,date:data.session_date,teams:data.teams||[],sizes:data.sizes||[],substitutes:data.substitutes||[],savedAt:data.created_at});
+   (data.substitutes||[]).forEach(id=>{if(id!==null&&id!==undefined){const p=getP(id);if(p)p.subUses=(p.subUses||0)+1;}});
+   renderHistory();
+   alert("Session enregistrée dans l’historique partagé.");
+ }catch(e){
+   console.error(e);
+   alert("Impossible d’enregistrer la session dans Supabase : "+e.message);
+ }
+}
+function renderHistory(){
+ historyList.innerHTML=history.length?history.slice().reverse().map(h=>`<div class="card"><b>${esc(h.date||"Date inconnue")}</b><div class="small">${h.teams.length} équipe(s)</div>${h.teams.map((t,i)=>`<div class="member"><b>Équipe ${i+1}</b> — ${t.map(id=>esc(getP(id)?.first||"Joueur supprimé")).join(", ")}</div>`).join("")}</div>`).join(""):'<div class="empty">Aucune session enregistrée.</div>';
+}
+async function clearHistory(){
+ if(!confirm("Effacer tout l’historique partagé pour tous les appareils ?"))return;
+ try{
+   const {error}=await supabaseClient.from("sessions").delete().gte("id",0);
+   if(error)throw error;
+   history=[];
+   players.forEach(p=>p.subUses=0);
+   renderHistory();
+   alert("Historique partagé effacé.");
+ }catch(e){
+   console.error(e);
+   alert("Impossible d’effacer l’historique dans Supabase : "+e.message);
+ }
+}
+
+(async()=>{
+ await load();
+ renderPlayers();
+ renderSession();
+ renderHistory();
+})();
+</script>
+</body>
+</html>
